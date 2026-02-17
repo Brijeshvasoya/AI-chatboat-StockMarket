@@ -18,7 +18,7 @@ const ChatInput = ({
           placeholder="Type your message..."
           value={messages}
           onChange={(e) => setMessages(e.target.value)}
-          disabled={isThinking || isTyping}
+          // disabled={isThinking || isTyping}
         />
         <button
           type="submit"

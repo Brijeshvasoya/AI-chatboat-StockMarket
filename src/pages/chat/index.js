@@ -23,6 +23,8 @@ const Index = () => {
   const [sidebarHistory, setSidebarHistory] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentTypingMessage, setCurrentTypingMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const getUserId = () => user?.id;
@@ -55,21 +57,15 @@ const Index = () => {
         },
         ...prev.filter((c) => c.id !== chatId),
       ];
-
       const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
       const index = allUsers.findIndex((u) => u.userId === getUserId());
-
       if (index !== -1) allUsers[index].chats = updated;
       else allUsers.push({ userId: getUserId(), chats: updated });
-
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
-
       return updated;
     });
-
     if (!currentChatId) setCurrentChatId(chatId);
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,18 +75,53 @@ const Index = () => {
     setChatHistory((p) => [...p, { type: "user", content: userMsg }]);
     setIsThinking(true);
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userMsg }),
-    });
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg }),
+      });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let aiReply = "";
+      setIsThinking(false);
+      setIsTyping(true);
+      setCurrentTypingMessage("");
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          setIsTyping(false);
+          setCurrentTypingMessage("");
+          setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
+          saveCurrentChatToHistory(userMsg, aiReply);
+          break;
+        }
 
-    const data = await res.json();
-    setIsThinking(false);
-    setChatHistory((p) => [...p, { type: "ai", content: data.reply }]);
-    saveCurrentChatToHistory(userMsg, data.reply);
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n").filter(line => line.startsWith("0:"));
+        for (const line of lines) {
+          try {
+            const text = JSON.parse(line.slice(2));
+            aiReply += text;
+            setCurrentTypingMessage(aiReply);
+
+          } catch (parseError) {
+            console.warn("⚠️ Parse error:", line, parseError);
+          }
+        }
+      }
+
+    } catch (error) {
+      setIsThinking(false);
+      setIsTyping(false);
+      setCurrentTypingMessage("");
+      setChatHistory((p) => [
+        ...p,
+        { type: "ai", content: "Sorry, something went wrong." },
+      ]);
+    }
   };
-
   const loadChatFromHistory = (id) => {
     const chat = sidebarHistory.find((c) => c.id === id);
     if (!chat) return;
@@ -98,23 +129,23 @@ const Index = () => {
     setChatHistory(chat.messages);
   };
 
-const deleteChat = (id, e) => {
-  e.stopPropagation();
-  const userId = getUserId();
-  setSidebarHistory((prev) => prev.filter((c) => c.id !== id));
-  const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  const updated = history.map((user) => {
-    if (user.userId === userId) {
-      return {
-        ...user,
-        chats: user.chats.filter((chat) => chat.id !== id),
-      };
-    }
-    return user;
-  });
+  const deleteChat = (id, e) => {
+    e.stopPropagation();
+    const userId = getUserId();
+    setSidebarHistory((prev) => prev.filter((c) => c.id !== id));
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    const updated = history.map((user) => {
+      if (user.userId === userId) {
+        return {
+          ...user,
+          chats: user.chats.filter((chat) => chat.id !== id),
+        };
+      }
+      return user;
+    });
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-};
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  };
 
 
   const startNewChat = () => {
@@ -152,14 +183,16 @@ const deleteChat = (id, e) => {
       />
 
       <div className="flex-1 flex flex-col">
-        <ChatHeader 
-          user={user} 
+        <ChatHeader
+          user={user}
           handleLogout={handleLogout}
           className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700/50"
         />
         <ChatMessages
           chatHistory={chatHistory}
           isThinking={isThinking}
+          isTyping={isTyping}
+          currentTypingMessage={currentTypingMessage}
           messagesEndRef={messagesEndRef}
           user={user}
           className="backdrop-blur-sm"
