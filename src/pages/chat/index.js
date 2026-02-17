@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import ChatSidebar from "@/components/chat/ChatSidebar";
@@ -22,8 +23,6 @@ const Index = () => {
   const [sidebarHistory, setSidebarHistory] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [currentTypingMessage, setCurrentTypingMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const getUserId = () => user?.id;
@@ -71,21 +70,6 @@ const Index = () => {
     if (!currentChatId) setCurrentChatId(chatId);
   };
 
-  const typeMessage = (text, callback) => {
-    let index = 0;
-    const typingSpeed = 30;
-    const interval = setInterval(() => {
-      if (index < text.length) {
-        setCurrentTypingMessage(text.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(interval);
-        setIsTyping(false);
-        setCurrentTypingMessage("");
-        callback();
-      }
-    }, typingSpeed);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,15 +86,9 @@ const Index = () => {
     });
 
     const data = await res.json();
-    console.log(data);
     setIsThinking(false);
-    setIsTyping(true);
-    setCurrentTypingMessage("");
-
-    typeMessage(data.reply, () => {
-      setChatHistory((p) => [...p, { type: "ai", content: data.reply }]);
-      saveCurrentChatToHistory(userMsg, data.reply);
-    });
+    setChatHistory((p) => [...p, { type: "ai", content: data.reply }]);
+    saveCurrentChatToHistory(userMsg, data.reply);
   };
 
   const loadChatFromHistory = (id) => {
@@ -182,8 +160,6 @@ const deleteChat = (id, e) => {
         <ChatMessages
           chatHistory={chatHistory}
           isThinking={isThinking}
-          isTyping={isTyping}
-          currentTypingMessage={currentTypingMessage}
           messagesEndRef={messagesEndRef}
           user={user}
           className="backdrop-blur-sm"
@@ -193,7 +169,6 @@ const deleteChat = (id, e) => {
           setMessages={setMessages}
           handleSubmit={handleSubmit}
           isThinking={isThinking}
-          isTyping={isTyping}
         />
       </div>
     </div>
