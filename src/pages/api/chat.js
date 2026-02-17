@@ -1,5 +1,5 @@
 import { generateText, streamText } from "ai";
-import { createMistral } from '@ai-sdk/mistral';
+import { createMistral } from "@ai-sdk/mistral";
 import { SYSTEM_PROMPT } from "@/components/constant";
 import { getStockData } from "@/components/tool/stockData";
 
@@ -22,15 +22,23 @@ export default async function handler(req, res) {
       messages: [{ role: "user", content: message }],
     });
     const allStockData = (toolResult.steps ?? [])
-      .flatMap(step => step.toolResults ?? [])
-      .map(r => r.result ?? r.output)
+      .flatMap((step) => step.toolResults ?? [])
+      .map((r) => r.result ?? r.output)
       .filter(Boolean);
     if (allStockData.length === 0) {
       const fallbackText = toolResult.text;
+      console.log("fallbackText", fallbackText);
       if (fallbackText) {
-        return res.status(200).json({ reply: fallbackText });
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Transfer-Encoding", "chunked");
+        res.setHeader("X-Accel-Buffering", "no");
+        res.flushHeaders();
+
+        res.write(`0:${JSON.stringify("Sorry, can't fetch data. we provide data for stocks market related data only.")}\n`);
+        res.end();
+        return;
       }
-      return res.status(200).json({ reply: "Sorry, can't fetch data." });
     }
     let injectedContent;
     if (allStockData.length === 1) {
@@ -41,7 +49,10 @@ export default async function handler(req, res) {
                           Now write the SINGLE STOCK FORMAT analysis.`;
     } else {
       const stocksText = allStockData
-        .map((data, i) => `Stock ${i + 1} (${data.symbol}):\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``)
+        .map(
+          (data, i) =>
+            `Stock ${i + 1} (${data.symbol}):\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``,
+        )
         .join("\n\n");
 
       injectedContent = `Here is the real-time data for ALL ${allStockData.length} stocks:
