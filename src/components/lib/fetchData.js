@@ -19,6 +19,8 @@ export async function fetchStockData(symbol) {
     changePercent: quote.regularMarketChangePercent,
     weekHigh52: quote.fiftyTwoWeekHigh,
     weekLow52: quote.fiftyTwoWeekLow,
+    weekHigh52ChangePercent: quote.fiftyTwoWeekHighChangePercent,
+    weekLow52ChangePercent: quote.fiftyTwoWeekLowChangePercent,
     volume: quote.regularMarketVolume,
     marketCap: quote.marketCap,
     peRatio: quote.trailingPE,
