@@ -23,7 +23,7 @@ const ChatLayout = ({ children }) => {
   };
 
   return (
-    <div className="h-screen flex bg-gray-900">
+    <div className="h-screen flex justify-center bg-gray-900">
       {!isSidebarOpen && (
         <button
           onClick={() => setIsSidebarOpen(true)}
@@ -47,15 +47,13 @@ const ChatLayout = ({ children }) => {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header — shared across /chat and /chat/[id] */}
         <ChatHeader
           user={user}
           handleLogout={handleLogout}
           className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700/50"
         />
 
-        {/* Page-specific content (ChatMessages + ChatInput) */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-col overflow-hidden">
           {children}
         </div>
       </div>

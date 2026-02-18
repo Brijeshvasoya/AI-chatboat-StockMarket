@@ -9,7 +9,7 @@ import { useChat } from "@/context/ChatContext";
 const NewChatPage = () => {
   const router = useRouter();
   const messagesEndRef = useRef(null);
-  const { user, saveChat } = useChat();
+ const { user, saveChat, authReady } = useChat();
 
   const [messages, setMessages] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
@@ -19,8 +19,11 @@ const NewChatPage = () => {
   const [currentTypingMessage, setCurrentTypingMessage] = useState("");
 
   useEffect(() => {
+    if (!authReady) return; 
     if (!user) router.push("/");
-  }, [user]);
+  }, [user, authReady]);
+
+  if (!authReady) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

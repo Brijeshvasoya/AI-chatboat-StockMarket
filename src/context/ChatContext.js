@@ -1,33 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const ChatContext = createContext(null);
-
 const STORAGE_KEY = "ALL_USERS_CHAT_HISTORY";
 
 export const ChatProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [sidebarHistory, setSidebarHistory] = useState([]);
+  const [authReady, setAuthReady] = useState(false); // ← key fix
 
+  // માત્ર client-side પર એક જ વખત run થાય
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (storedUser) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(storedUser);
-
-      if (storedUser) {
-        const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        const currentUser = allUsers.find((u) => u.userId === storedUser.id);
-        setSidebarHistory(currentUser?.chats || []);
-      }
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const currentUser = allUsers.find((u) => u.userId === storedUser.id);
+      setSidebarHistory(currentUser?.chats || []);
     }
+    setAuthReady(true); // localStorage read થઈ ગયું
   }, []);
-
-  const loadUserHistory = (loggedInUser) => {
-    setUser(loggedInUser);
-    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    const currentUser = allUsers.find((u) => u.userId === loggedInUser.id);
-    setSidebarHistory(currentUser?.chats || []);
-  };
 
   const saveChat = (chatId, userMessage, aiResponse, setChatId) => {
     const resolvedId = chatId || Date.now().toString();
@@ -48,7 +40,7 @@ export const ChatProvider = ({ children }) => {
         ...prev.filter((c) => c.id !== resolvedId),
       ];
 
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const index = allUsers.findIndex((u) => u.userId === user?.id);
       if (index !== -1) allUsers[index].chats = updated;
       else allUsers.push({ userId: user?.id, chats: updated });
@@ -64,14 +56,12 @@ export const ChatProvider = ({ children }) => {
   const deleteChat = (id, e) => {
     e?.stopPropagation();
     setSidebarHistory((prev) => prev.filter((c) => c.id !== id));
-
-    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    const updated = allUsers.map((u) => {
-      if (u.userId === user?.id) {
-        return { ...u, chats: u.chats.filter((chat) => chat.id !== id) };
-      }
-      return u;
-    });
+    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const updated = allUsers.map((u) =>
+      u.userId === user?.id
+        ? { ...u, chats: u.chats.filter((chat) => chat.id !== id) }
+        : u
+    );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   };
 
@@ -82,11 +72,19 @@ export const ChatProvider = ({ children }) => {
     router.push("/");
   };
 
+  const loadUserHistory = (loggedInUser) => {
+    setUser(loggedInUser);
+    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const currentUser = allUsers.find((u) => u.userId === loggedInUser.id);
+    setSidebarHistory(currentUser?.chats || []);
+  };
+
   return (
     <ChatContext.Provider
       value={{
         user,
         setUser,
+        authReady,
         sidebarHistory,
         setSidebarHistory,
         loadUserHistory,

@@ -1,11 +1,4 @@
-import { generateText, streamText } from "ai";
-import { createMistral } from "@ai-sdk/mistral";
-import { SYSTEM_PROMPT } from "@/components/constant";
-import { getStockData } from "@/components/tool/stockData";
-
-const LLM = createMistral({
-  apiKey: process.env.MISTRAL_API_KEY,
-});
+import { stockAgent } from "@/components/Agent/StockAgent";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -14,72 +7,50 @@ export default async function handler(req, res) {
 
   try {
     const { message } = req.body;
-    const toolResult = await generateText({
-      model: LLM("mistral-large-latest"),
-      tools: { getStockData },
-      maxSteps: 10,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: message }],
-    });
-    const allStockData = (toolResult.steps ?? [])
-      .flatMap((step) => step.toolResults ?? [])
-      .map((r) => r.result ?? r.output)
-      .filter(Boolean);
-    if (allStockData.length === 0) {
-      const fallbackText = toolResult.text;
-      console.log("fallbackText", fallbackText);
-      if (fallbackText) {
-        res.setHeader("Content-Type", "text/plain; charset=utf-8");
-        res.setHeader("Cache-Control", "no-cache");
-        res.setHeader("Transfer-Encoding", "chunked");
-        res.setHeader("X-Accel-Buffering", "no");
-        res.flushHeaders();
+    const { toolResults } = await stockAgent.run(message);
 
-        res.write(`0:${JSON.stringify("Sorry, can't fetch data. we provide data for stocks market related data only.")}\n`);
-        res.end();
-        return;
-      }
+    const allStockData = toolResults ?? [];
+
+    if (allStockData.length === 0) {
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Transfer-Encoding", "chunked");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+      res.write(`0:${JSON.stringify("Sorry, can't fetch data. We provide data for stock market related queries only.")}\n`);
+      res.end();
+      return;
     }
+
     let injectedContent;
     if (allStockData.length === 1) {
-      injectedContent = `Here is the real-time stock data:
-                          \`\`\`json
-                          ${JSON.stringify(allStockData[0], null, 2)}
-                          \`\`\`
-                          Now write the SINGLE STOCK FORMAT analysis.`;
+      injectedContent = `Here is the real-time stock data:\`\`\`json${JSON.stringify(allStockData[0], null, 2)}\`\`\`Now write the SINGLE STOCK FORMAT analysis.`;
     } else {
       const stocksText = allStockData
-        .map(
-          (data, i) =>
-            `Stock ${i + 1} (${data.symbol}):\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``,
-        )
+        .map((data, i) => `Stock ${i + 1} (${data.symbol}):\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``)
         .join("\n\n");
 
-      injectedContent = `Here is the real-time data for ALL ${allStockData.length} stocks:
-                          ${stocksText}
+      injectedContent = `Here is the real-time data for ALL
+                          ${allStockData.length} stocks:${stocksText}
                           Now write the MULTI STOCK FORMAT:
                           - First show individual table + analysis for EACH stock
                           - Then MANDATORY: show Head-to-Head Comparison table
                           - Then MANDATORY: show Final Verdict`;
     }
-    const analysisResult = await streamText({
-      model: LLM("mistral-large-latest"),
-      system: SYSTEM_PROMPT,
-      messages: [
-        { role: "user", content: message },
-        { role: "user", content: injectedContent },
-      ],
-    });
+
+    const analysisResult = await stockAgent.stream(injectedContent);
+
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Transfer-Encoding", "chunked");
     res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
+
     for await (const chunk of analysisResult.textStream) {
-      const formatted = `0:${JSON.stringify(chunk)}\n`;
-      res.write(formatted);
+      res.write(`0:${JSON.stringify(chunk)}\n`);
       if (res.flush) res.flush();
     }
+
     res.end();
     return;
   } catch (error) {

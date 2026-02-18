@@ -7,7 +7,7 @@ const ChatInput = ({
   className,
 }) => {
   return (
-    <div className={`text-center p-4 lg:p-6 pt-0 lg:pt-0 ${className}`}>
+    <div className={`text-center w-2/3 mx-auto p-4 lg:p-6 pt-0 lg:pt-0 ${className}`}>
       <form
         onSubmit={handleSubmit}
         className="flex items-center bg-gray-800/50 gap-3 rounded-2xl p-2 hover-lift focus-within:ring-2 glass-effect focus-within:ring-blue-500/50"
