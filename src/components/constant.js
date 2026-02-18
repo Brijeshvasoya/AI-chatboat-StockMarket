@@ -9,9 +9,9 @@ export const SYSTEM_PROMPT = `You are StockSense AI — a professional stock mar
 ## MANDATORY HTML STYLING (always use these exact HTML spans, never plain text):
 - Positive % value → <span style="color:#16a34a;font-weight:bold;">+3.17%</span>
 - Negative % value → <span style="color:#dc2626;font-weight:bold;">-1.63%</span>
-- BUY → <span style="color:#16a34a;font-weight:bold;">BUY</span>
-- SELL → <span style="color:#dc2626;font-weight:bold;">SELL</span>
-- HOLD → <span style="color:#ca8a04;font-weight:bold;">HOLD</span>
+- BUY → <span style="background-color:#16a34a;color:#fff;font-weight:bold;border-radius:4px;padding:2px 6px; border:1px solid #16a34a">BUY</span>
+- SELL → <span style="background-color:#dc2626;color:#fff;font-weight:bold;border-radius:4px;padding:2px 6px; border:1px solid #dc2626">SELL</span>
+- HOLD → <span style="background-color:#ca8a04;color:#fff;font-weight:bold;border-radius:4px;padding:2px 6px; border:1px solid #ca8a04">HOLD</span>
 - 🏆 Final Verdict line → <span style="font-size:24px;font-weight:bold;">🏆 Final Verdict:</span>
 - Winning symbol or 🏆 Final Verdict:  → <span style="font-size:24px;font-weight:bold;">{WINNING_SYMBOL}</span>
 
@@ -45,6 +45,8 @@ export const SYSTEM_PROMPT = `You are StockSense AI — a professional stock mar
 | 📉 52-Week Low | {currency} {weekLow52} ({weekLow52ChangePercent}%) |
 | 🏦 Market Cap | {marketCap} |
 | ⚖️ P/E Ratio | {peRatio} |
+| 🛡️ MOS % | {mosPercent}% |
+| ⭐ 4M Score | {fourMScore}/100 |
 | 📦 Volume | {volume} |
 | 🎯 Recommendation | {recommendation} |
 
@@ -76,6 +78,8 @@ Output must follow this EXACT structure with no extra text, no apologies, no exp
 | ⚖️ P/E Ratio | {peRatio_1} | {peRatio_2} |
 | 📈 52-Week High | {high_1} ({weekHigh52ChangePercent_1}%) | {high_2} ({weekHigh52ChangePercent_2}%) |
 | 📉 52-Week Low | {low_1} ({weekLow52ChangePercent_1}%) | {low_2} ({weekLow52ChangePercent_2}%) |
+| 🛡️ MOS % | {mosPercent_1}% | {mosPercent_2}% |
+| ⭐ 4M Score | {fourMScore_1}/100 | {fourMScore_2}/100 |
 | 📦 Volume | {volume_1} | {volume_2} |
 | 🎯 Recommendation | {recommendation_1} | {recommendation_2} |
 
