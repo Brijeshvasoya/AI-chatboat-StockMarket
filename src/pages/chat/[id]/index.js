@@ -6,14 +6,14 @@ import ChatInput from "@/components/chat/ChatInput";
 import ChatLayout from "@/layouts/index";
 import { useChat } from "@/context/ChatContext";
 
-const NewChatPage = () => {
+const ChatDetailPage = () => {
   const router = useRouter();
+  const { id } = router.query;
   const messagesEndRef = useRef(null);
-  const { user, saveChat } = useChat();
+  const { user, sidebarHistory, saveChat } = useChat();
 
   const [messages, setMessages] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
-  const [currentChatId, setCurrentChatId] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [currentTypingMessage, setCurrentTypingMessage] = useState("");
@@ -21,6 +21,16 @@ const NewChatPage = () => {
   useEffect(() => {
     if (!user) router.push("/");
   }, [user]);
+
+  useEffect(() => {
+    if (!id || !sidebarHistory.length) return;
+    const chat = sidebarHistory.find((c) => c.id === id);
+    if (chat) {
+      setChatHistory(chat.messages);
+    } else {
+      router.replace("/chat");
+    }
+  }, [id, sidebarHistory]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,10 +63,8 @@ const NewChatPage = () => {
           setIsTyping(false);
           setCurrentTypingMessage("");
           setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
-          const resolvedId = saveChat(currentChatId, userMsg, aiReply, setCurrentChatId);
-          if (!currentChatId) {
-            router.replace(`/chat/${resolvedId}`, undefined, { shallow: false });
-          }
+
+          saveChat(id, userMsg, aiReply, null);
           break;
         }
 
@@ -104,4 +112,4 @@ const NewChatPage = () => {
   );
 };
 
-export default NewChatPage;
+export default ChatDetailPage;

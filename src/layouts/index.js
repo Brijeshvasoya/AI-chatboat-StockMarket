@@ -1,0 +1,66 @@
+import React, { useState } from "react";
+import { useRouter } from "next/router";
+import ChatSidebar from "@/components/chat/ChatSidebar";
+import ChatHeader from "@/components/chat/ChatHeader";
+import { MenuIcon } from "@/components/chat/Icons";
+import { useChat } from "@/context/ChatContext";
+
+const ChatLayout = ({ children }) => {
+  const router = useRouter();
+  const { user, sidebarHistory, deleteChat, logout } = useChat();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const formatTimestamp = (ts) => new Date(ts).toLocaleDateString();
+
+  const handleLogout = () => logout(router);
+
+  const loadChatFromHistory = (id) => {
+    router.push(`/chat/${id}`);
+  };
+
+  const startNewChat = () => {
+    router.push("/chat");
+  };
+
+  return (
+    <div className="h-screen flex bg-gray-900">
+      {!isSidebarOpen && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="fixed top-4 left-4 z-50"
+        >
+          <MenuIcon />
+        </button>
+      )}
+
+      {/* Sidebar — shared across /chat and /chat/[id] */}
+      <ChatSidebar
+        sidebarHistory={sidebarHistory}
+        currentChatId={router.query.id || null}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        startNewChat={startNewChat}
+        loadChatFromHistory={loadChatFromHistory}
+        deleteChat={deleteChat}
+        formatTimestamp={formatTimestamp}
+        className="bg-gray-800/60 backdrop-blur-xl border-r border-gray-700/30"
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header — shared across /chat and /chat/[id] */}
+        <ChatHeader
+          user={user}
+          handleLogout={handleLogout}
+          className="bg-gray-800/80 backdrop-blur-md border-b border-gray-700/50"
+        />
+
+        {/* Page-specific content (ChatMessages + ChatInput) */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatLayout;
