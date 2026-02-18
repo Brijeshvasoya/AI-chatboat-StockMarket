@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { FaExclamationTriangle, FaHome } from 'react-icons/fa';
 
 export default function NotFound() {
   return (
@@ -14,35 +13,6 @@ export default function NotFound() {
         <p className="mt-4 text-lg text-gray-600">
           Oops! The page you are looking for seems to have wandered off into the digital wilderness.
         </p>
-        <div className="pt-6">
-          <Link 
-            href="/" 
-            className="
-              inline-flex 
-              items-center 
-              px-6 
-              py-3 
-              border 
-              border-transparent 
-              text-base 
-              font-medium 
-              rounded-md 
-              shadow-sm 
-              text-white 
-              bg-blue-600 
-              hover:bg-blue-700 
-              focus:outline-none 
-              focus:ring-2 
-              focus:ring-offset-2 
-              focus:ring-blue-500
-              transition
-              transform
-              hover:scale-105
-            "
-          >
-            <FaHome className="mr-2" /> Return to Home
-          </Link>
-        </div>
       </div>
     </div>
   );
