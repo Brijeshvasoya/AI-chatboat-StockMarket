@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import StarBackground from "@/components/chat/StarBackground";
+import { useChat } from "@/context/ChatContext";
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,14 +10,17 @@ export default function Home() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { authReady, user, setUser, loadUserHistory } = useChat();
   const router = useRouter();
-
+  
+  console.log("🚀 ~ Home ~ user:", user)
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    if (!authReady) return;
     if (user) {
       router.push("/chat");
     }
-  }, );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady, user]);
 
   const generateRandomId = () => {
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
@@ -40,7 +44,8 @@ export default function Home() {
           loginTime: new Date().toISOString(),
         };
         localStorage.setItem("user", JSON.stringify(userData));
-
+        setUser(userData);
+        loadUserHistory(userData);
         router.push("/chat");
       } else {
         setError("Invalid email or password");
@@ -76,11 +81,11 @@ export default function Home() {
             AI Assistant
           </h1>
           <h2 className="text-xl font-semibold text-transparent bg-clip-text mb-2" style={{
-              backgroundImage: "linear-gradient(to right, #f472, #10b981)",
-              backgroundSize: "200% 100%",
-              backgroundPosition: "200% 0",
-              animation: "gradientFill 3s ease-in-out infinite",
-            }}>
+            backgroundImage: "linear-gradient(to right, #f472, #10b981)",
+            backgroundSize: "200% 100%",
+            backgroundPosition: "200% 0",
+            animation: "gradientFill 3s ease-in-out infinite",
+          }}>
             {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
           <p className="text-gray-400 pb-4">
