@@ -9,7 +9,7 @@ import { useChat } from "@/context/ChatContext";
 const NewChatPage = () => {
   const router = useRouter();
   const messagesEndRef = useRef(null);
- const { user, saveChat, authReady } = useChat();
+  const { user, saveChat, authReady } = useChat();
 
   const [messages, setMessages] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
@@ -19,7 +19,7 @@ const NewChatPage = () => {
   const [currentTypingMessage, setCurrentTypingMessage] = useState("");
 
   useEffect(() => {
-    if (!authReady) return; 
+    if (!authReady) return;
     if (!user) router.push("/");
   }, [user, authReady]);
 
@@ -46,30 +46,60 @@ const NewChatPage = () => {
       const decoder = new TextDecoder();
       let aiReply = "";
 
+      let wordQueue = [];
+      let isProcessingQueue = false;
+
+      const processQueue = () => {
+        if (isProcessingQueue) return;
+        isProcessingQueue = true;
+
+        const tick = () => {
+          if (wordQueue.length === 0) {
+            isProcessingQueue = false;
+            return;
+          }
+          const next = wordQueue.shift();
+          aiReply += next;
+          setCurrentTypingMessage(aiReply);
+          setTimeout(tick, 18);
+        };
+        tick();
+      };
+
       setIsThinking(false);
       setIsTyping(true);
       setCurrentTypingMessage("");
 
       while (true) {
         const { done, value } = await reader.read();
+
         if (done) {
-          setIsTyping(false);
-          setCurrentTypingMessage("");
-          setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
-          const resolvedId = saveChat(currentChatId, userMsg, aiReply, setCurrentChatId);
-          if (!currentChatId) {
-            router.replace(`/chat/${resolvedId}`, undefined, { shallow: false });
-          }
+          const waitForQueue = () => {
+            if (wordQueue.length > 0 || isProcessingQueue) {
+              setTimeout(waitForQueue, 20);
+            } else {
+              setIsTyping(false);
+              setCurrentTypingMessage("");
+              setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
+              const resolvedId = saveChat(currentChatId, userMsg, aiReply, setCurrentChatId);
+              if (!currentChatId) {
+                router.replace(`/chat/${resolvedId}`, undefined, { shallow: false });
+              }
+            }
+          };
+          waitForQueue();
           break;
         }
 
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split("\n").filter((line) => line.startsWith("0:"));
+
         for (const line of lines) {
           try {
             const text = JSON.parse(line.slice(2));
-            aiReply += text;
-            setCurrentTypingMessage(aiReply);
+            const tokens = text.split(/(\s+)/);
+            wordQueue.push(...tokens);
+            processQueue();
           } catch (parseError) {
             console.warn("⚠️ Parse error:", line, parseError);
           }
@@ -85,7 +115,6 @@ const NewChatPage = () => {
       ]);
     }
   };
-
   return (
     <ChatLayout>
       <ChatMessages

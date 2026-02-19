@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import StarBackground from "@/components/chat/StarBackground";
-import { useChat } from "@/context/ChatContext";
 
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,17 +8,15 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [loading, setIsLoading] = useState(false);
-  const { authReady, loadUserHistory } = useChat();
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (!authReady) return; // authReady ન હોય ત્યાં સુધી રાહ જુઓ
     const user = localStorage.getItem("user");
     if (user) {
       router.push("/chat");
     }
-  }, [authReady]);
+  }, );
 
   const generateRandomId = () => {
     return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
@@ -43,7 +40,7 @@ export default function Home() {
           loginTime: new Date().toISOString(),
         };
         localStorage.setItem("user", JSON.stringify(userData));
-        loadUserHistory(userData);
+
         router.push("/chat");
       } else {
         setError("Invalid email or password");
@@ -79,11 +76,11 @@ export default function Home() {
             AI Assistant
           </h1>
           <h2 className="text-xl font-semibold text-transparent bg-clip-text mb-2" style={{
-            backgroundImage: "linear-gradient(to right, #f472, #10b981)",
-            backgroundSize: "200% 100%",
-            backgroundPosition: "200% 0",
-            animation: "gradientFill 3s ease-in-out infinite",
-          }}>
+              backgroundImage: "linear-gradient(to right, #f472, #10b981)",
+              backgroundSize: "200% 100%",
+              backgroundPosition: "200% 0",
+              animation: "gradientFill 3s ease-in-out infinite",
+            }}>
             {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
           <p className="text-gray-400 pb-4">
@@ -146,10 +143,10 @@ export default function Home() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
               >
-                {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
+                {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
               </button>
             </form>
 

@@ -6,9 +6,8 @@ const STORAGE_KEY = "ALL_USERS_CHAT_HISTORY";
 export const ChatProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [sidebarHistory, setSidebarHistory] = useState([]);
-  const [authReady, setAuthReady] = useState(false); // ← key fix
+  const [authReady, setAuthReady] = useState(false);
 
-  // માત્ર client-side પર એક જ વખત run થાય
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     if (storedUser) {
@@ -18,7 +17,7 @@ export const ChatProvider = ({ children }) => {
       const currentUser = allUsers.find((u) => u.userId === storedUser.id);
       setSidebarHistory(currentUser?.chats || []);
     }
-    setAuthReady(true); // localStorage read થઈ ગયું
+    setAuthReady(true);
   }, []);
 
   const saveChat = (chatId, userMessage, aiResponse, setChatId) => {

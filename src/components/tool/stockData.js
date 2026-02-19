@@ -1,15 +1,26 @@
 import { z } from "zod";
 import { tool } from "ai";
 import { fetchStockData } from "../lib/fetchData";
+import { StockDataToolPrompt } from "../Prompt/StockDataToolPrompt";
 
 export const getStockData = tool({
-  description: "Fetch stock data by symbol",
-  name: "getStockData",
-  inputSchema: z.object({
-    symbol: z.string().describe("The stock symbol to fetch data for"),
+  description: StockDataToolPrompt,
+  parameters: z.object({
+    symbol: z
+      .string()
+      .min(1, "Symbol is required — never call with empty args")
+      .describe("Ticker symbol e.g. INFY.BO, RELIANCE.NS, AAPL"),
   }),
   execute: async ({ symbol }) => {
-    const stockData = await fetchStockData(symbol);
-    return stockData;
+    if (!symbol || symbol.trim() === "") {
+      return { error: "Symbol is required. Call again with {\"symbol\": \"TICKER.BO\"}" };
+    }
+
+    try {
+      const stockData = await fetchStockData(symbol.trim().toUpperCase());
+      return stockData;
+    } catch (err) {
+      return { error: err.message, symbol };
+    }
   },
 });
