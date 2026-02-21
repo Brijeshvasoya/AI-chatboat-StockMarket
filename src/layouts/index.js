@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatHeader from "@/components/chat/ChatHeader";
@@ -7,8 +7,17 @@ import { useChat } from "@/context/ChatContext";
 
 const ChatLayout = ({ children }) => {
   const router = useRouter();
+  const id = router.query.id;
   const { user, sidebarHistory, deleteChat, logout } = useChat();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    const chat = sidebarHistory.find((c) => c.id === id);
+    if (chat) {
+      router.push(`/chat/${id}`);
+    }
+  }, [id]);
 
   const formatTimestamp = (ts) => new Date(ts).toLocaleDateString();
 

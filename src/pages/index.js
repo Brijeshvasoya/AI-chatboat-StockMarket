@@ -13,7 +13,6 @@ export default function Home() {
   const { authReady, user, setUser, loadUserHistory } = useChat();
   const router = useRouter();
   
-  console.log("🚀 ~ Home ~ user:", user)
   useEffect(() => {
     if (!authReady) return;
     if (user) {
