@@ -140,6 +140,8 @@ export default function StockChart({
 
               {/* Y Axis */}
               <YAxis
+                width="auto"
+                tickMargin={10}
                 stroke="#9ca3af"
                 fontSize={11}
                 tickFormatter={(value) => formatPrice(value, currency)}
@@ -149,7 +151,6 @@ export default function StockChart({
                   (dataMin) => Math.floor(dataMin * 0.98),
                   (dataMax) => Math.ceil(dataMax * 1.02),
                 ]}
-                dx={-10}
               />
 
               {/* Area under line */}
