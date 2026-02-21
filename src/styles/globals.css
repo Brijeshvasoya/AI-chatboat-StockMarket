@@ -97,3 +97,22 @@ body {
   backdrop-filter: blur(16px);
   border: 1px solid rgba(75, 85, 99, 0.3);
 }
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  scrollbar-color: transparent;  /* Hide scrollbar thumb */
+  scrollbar-track-color: transparent;  /* Hide scrollbar track */
+}
+ 
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+ 
+.hide-scrollbar::-webkit-scrollbar-thumb {
+  display: none;
+}
+ 
+.hide-scrollbar::-webkit-scrollbar-track {
+  display: none;
+}

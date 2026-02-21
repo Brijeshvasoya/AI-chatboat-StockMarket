@@ -28,7 +28,7 @@ const ChatSidebar = ({
         <p className="text-xs text-gray-500">Your personal conversations</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 hide-scrollbar">
         <div
           onClick={startNewChat}
           className="p-3 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 cursor-pointer flex items-center gap-3 hover-lift"

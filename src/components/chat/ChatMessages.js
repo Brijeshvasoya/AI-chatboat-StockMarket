@@ -21,7 +21,7 @@ const ChatMessages = ({
   }, [chatHistory, isThinking, isTyping, currentTypingMessage]);
 
   return (
-    <div className={`flex-1 p-4 lg:p-8 overflow-y-auto ${className}`}>
+    <div className={`flex-1 p-4 lg:p-8 overflow-y-auto hide-scrollbar ${className}`}>
       <div className="max-w-4xl mx-auto">
         {chatHistory.length === 0 && !isThinking && !isTyping ? (
           <div className="text-center py-12">

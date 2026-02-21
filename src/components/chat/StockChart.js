@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Area,
   ComposedChart,
+  ReferenceLine,
 } from "recharts";
 
 const formatPrice = (value, currency) =>
@@ -44,8 +45,9 @@ export default function StockChart({
   const currentPrice = data[data.length - 1].price;
 
   return (
-    <div className="w-full max-w-2xl rounded-3xl bg-gray-800/40 backdrop-blur-xl border border-gray-700/30 shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 hover:scale-[1.02]">
-      {/* Header with gradient background */}
+    <div className="w-full max-w-2xl rounded-3xl bg-gray-800/40 backdrop-blur-xl border border-gray-700/30 shadow-2xl overflow-hidden transition-all duration-300 ">
+      
+      {/* ---------- HEADER ---------- */}
       <div className="relative bg-linear-to-r from-blue-600/20 to-emerald-600/20 p-6 border-b border-gray-700/30">
         <div className="absolute inset-0 bg-linear-to-r from-blue-500/10 to-emerald-500/10"></div>
 
@@ -56,7 +58,7 @@ export default function StockChart({
                 <img
                   src={logo}
                   alt={symbol}
-                  className="w-9 h-9 rounded-2xl bg-white p-1"
+                  className="w-9 h-9 rounded-xl bg-white p-1"
                   onError={(e) => (e.target.style.display = "none")}
                 />
               )}
@@ -89,26 +91,26 @@ export default function StockChart({
         </div>
       </div>
 
-      {/* Chart Container */}
+      {/* ---------- CHART ---------- */}
       <div className="bg-linear-to-b from-gray-900/20 to-gray-800/20">
-        <div className="w-full h-[400px]">
+        <div className="w-full h-[300px] sm:h-[350px] md:h-[400px]">
           <ResponsiveContainer>
             <ComposedChart
               data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 20, right: 30, left: 30, bottom: 20 }}
             >
               {/* Gradient Definitions */}
               <defs>
                 <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop
-                    offset="5%"
+                    offset="0%"
                     stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"}
-                    stopOpacity={0.8}
+                    stopOpacity={0.3}
                   />
                   <stop
-                    offset="95%"
+                    offset="100%"
                     stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"}
-                    stopOpacity={0.1}
+                    stopOpacity={0}
                   />
                 </linearGradient>
                 <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
@@ -122,8 +124,7 @@ export default function StockChart({
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#374151"
-                opacity={0.3}
-                horizontal={true}
+                opacity={0.15}
                 vertical={false}
               />
 
@@ -144,6 +145,7 @@ export default function StockChart({
                 tickMargin={10}
                 stroke="#9ca3af"
                 fontSize={11}
+                tickCount={10}
                 tickFormatter={(value) => formatPrice(value, currency)}
                 tickLine={false}
                 axisLine={false}
@@ -153,55 +155,63 @@ export default function StockChart({
                 ]}
               />
 
-              {/* Area under line */}
+              {/* ----- CURRENT PRICE LINE ----- */}
+              <ReferenceLine
+                y={currentPrice}
+                stroke={priceInfo.isPositive ? "#10b981" : "#ef4444"}
+                strokeDasharray="3 3"
+                strokeOpacity={0.6}
+              />
+
+              {/* ----- AREA ----- */}
               <Area
-                type="monotone"
+                type="natural"
                 dataKey="price"
                 stroke="none"
                 fill="url(#colorGradient)"
-                fillOpacity={0.6}
+                animationDuration={1200}
+                animationEasing="ease-out"
                 tooltipType="none"
               />
 
-              {/* Main Line */}
+              {/* ----- MAIN LINE ----- */}
               <Line
-                type="monotone"
+                type="natural"
                 dataKey="price"
                 stroke="url(#lineGradient)"
                 strokeWidth={3}
                 dot={false}
-                activeDot={{
-                  r: 8,
-                  stroke: "#fff",
-                  strokeWidth: 3,
-                  fill: priceInfo.isPositive ? "#10b981" : "#ef4444",
-                  className: "animate-pulse",
+                animationDuration={1200}
+                animationEasing="ease-out"
+                style={{
+                  filter: "drop-shadow(0px 0px 6px rgba(59,130,246,0.6))",
                 }}
-                animationDuration={1500}
-                animationBegin={0}
+                activeDot={{
+                  r: 6,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                  fill: priceInfo.isPositive ? "#10b981" : "#ef4444",
+                }}
               />
 
               {/* Enhanced Tooltip */}
               <Tooltip
+                cursor={{
+                  stroke: "#6b7280",
+                  strokeWidth: 1,
+                  strokeDasharray: "4 4",
+                }}
                 contentStyle={{
                   background:
                     "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
                   border: "1px solid #374151",
-                  borderRadius: "16px",
+                  borderRadius: "12px",
                   color: "#fff",
-                  padding: "12px 16px",
+                  padding: "10px 14px",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
-                  backdropFilter: "blur(10px)",
                 }}
-                labelStyle={{
-                  color: "#9ca3af",
-                  fontSize: "12px",
-                  marginBottom: "4px",
-                }}
-                itemStyle={{
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                }}
+                labelStyle={{ color: "#9ca3af", fontSize: "12px" }}
+                formatter={(value) => formatPrice(value, currency)}
                 labelFormatter={(label) =>
                   new Date(label).toLocaleDateString("en-US", {
                     weekday: "short",
@@ -209,16 +219,6 @@ export default function StockChart({
                     day: "numeric",
                   })
                 }
-                formatter={(value) => [
-                  <span
-                    style={{
-                      color: priceInfo.isPositive ? "#10b981" : "#ef4444",
-                    }}
-                  >
-                    {formatPrice(value, currency)}
-                  </span>,
-                  "Price",
-                ]}
               />
             </ComposedChart>
           </ResponsiveContainer>
