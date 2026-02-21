@@ -59,6 +59,7 @@ const ChatMessages = ({
                         data={msg.chart.data}
                         symbol={msg.chart.symbol}
                         logo={msg.chart.logo}
+                        currency={msg.chart.currency}
                       />
                     ) : (
                       <div

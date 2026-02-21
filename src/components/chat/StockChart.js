@@ -9,7 +9,8 @@ import {
   ComposedChart,
 } from "recharts";
 
-const formatPrice = (value) => `$${value?.toFixed(2)}`;
+const formatPrice = (value, currency) =>
+  `${currency && currency} ${value?.toFixed(2)}`;
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString("en-US", {
@@ -31,7 +32,12 @@ const calculatePriceChange = (data) => {
   };
 };
 
-export default function StockChart({ data = [], symbol, logo }) {
+export default function StockChart({
+  data = [],
+  symbol,
+  logo,
+  currency = "₹",
+}) {
   if (!data?.length) return null;
 
   const priceInfo = calculatePriceChange(data);
@@ -42,7 +48,7 @@ export default function StockChart({ data = [], symbol, logo }) {
       {/* Header with gradient background */}
       <div className="relative bg-linear-to-r from-blue-600/20 to-emerald-600/20 p-6 border-b border-gray-700/30">
         <div className="absolute inset-0 bg-linear-to-r from-blue-500/10 to-emerald-500/10"></div>
-        
+
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -60,10 +66,10 @@ export default function StockChart({ data = [], symbol, logo }) {
               1 Month
             </span>
           </div>
-          
+
           <div className="flex items-baseline gap-4">
             <span className="text-2xl font-bold text-white">
-              {formatPrice(currentPrice)}
+              {formatPrice(currentPrice, currency)}
             </span>
             <div
               className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
@@ -136,10 +142,13 @@ export default function StockChart({ data = [], symbol, logo }) {
               <YAxis
                 stroke="#9ca3af"
                 fontSize={11}
-                tickFormatter={formatPrice}
+                tickFormatter={(value) => formatPrice(value, currency)}
                 tickLine={false}
                 axisLine={false}
-                domain={["dataMin - 5", "dataMax + 5"]}
+                domain={[
+                  (dataMin) => Math.floor(dataMin * 0.98),
+                  (dataMax) => Math.ceil(dataMax * 1.02),
+                ]}
                 dx={-10}
               />
 
@@ -205,7 +214,7 @@ export default function StockChart({ data = [], symbol, logo }) {
                       color: priceInfo.isPositive ? "#10b981" : "#ef4444",
                     }}
                   >
-                    {formatPrice(value)}
+                    {formatPrice(value, currency)}
                   </span>,
                   "Price",
                 ]}
