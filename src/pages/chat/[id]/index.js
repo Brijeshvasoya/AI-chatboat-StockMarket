@@ -136,6 +136,7 @@ const ChatDetailPage = () => {
         setMessages={setMessages}
         handleSubmit={handleSubmit}
         isThinking={isThinking}
+        isTyping={isTyping}
       />
     </ChatLayout>
   );
