@@ -48,8 +48,13 @@ export const getStockChart = tool({
         ?.replace("http://", "")
         ?.split("/")[0];
 
+      const token = process.env.LOGO_API_KEY
+        ?.replace(/^["']|["']$/g, "")
+        ?.replace(/%22/g, "")
+        ?.trim();
+
       const logo = domain
-        ? `https://img.logo.dev/${domain}?token=${process.env.LOGO_API_KEY}`
+        ? `https://img.logo.dev/${domain}?token=${token}`
         : null;
 
       const currencyCode = summary?.price?.currency;
