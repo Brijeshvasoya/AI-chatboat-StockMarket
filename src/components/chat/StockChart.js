@@ -143,6 +143,7 @@ export default function StockChart({ data = [], symbol }) {
                 stroke="none"
                 fill="url(#colorGradient)"
                 fillOpacity={0.6}
+                tooltipType="none"
               />
 
               {/* Main Line */}
