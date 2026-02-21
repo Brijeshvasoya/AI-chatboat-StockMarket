@@ -1,5 +1,4 @@
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -7,7 +6,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Area,
-  AreaChart,
   ComposedChart,
 } from "recharts";
 
@@ -33,7 +31,7 @@ const calculatePriceChange = (data) => {
   };
 };
 
-export default function StockChart({ data = [], symbol }) {
+export default function StockChart({ data = [], symbol, logo }) {
   if (!data?.length) return null;
 
   const priceInfo = calculatePriceChange(data);
@@ -48,7 +46,14 @@ export default function StockChart({ data = [], symbol }) {
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <span className="text-2xl">📈</span>
+              {logo && (
+                <img
+                  src={logo}
+                  alt={symbol}
+                  className="w-9 h-9 rounded-2xl bg-white p-1"
+                  onError={(e) => (e.target.style.display = "none")}
+                />
+              )}
               {symbol}
             </h3>
             <span className="text-xs text-gray-400 bg-gray-800/50 px-3 py-1 rounded-full">
@@ -60,13 +65,15 @@ export default function StockChart({ data = [], symbol }) {
             <span className="text-2xl font-bold text-white">
               {formatPrice(currentPrice)}
             </span>
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-              priceInfo.isPositive 
-                ? 'bg-green-500/20 text-green-400' 
-                : 'bg-red-500/20 text-red-400'
-            }`}>
+            <div
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
+                priceInfo.isPositive
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-red-500/20 text-red-400"
+              }`}
+            >
               <span className="text-sm font-semibold">
-                {priceInfo.isPositive ? '↑' : '↓'}
+                {priceInfo.isPositive ? "↑" : "↓"}
               </span>
               <span className="text-sm font-bold">
                 {Math.abs(priceInfo.changePercent).toFixed(2)}%
@@ -77,7 +84,7 @@ export default function StockChart({ data = [], symbol }) {
       </div>
 
       {/* Chart Container */}
-      <div className="p-6 bg-linear-to-b from-gray-900/20 to-gray-800/20">
+      <div className="bg-linear-to-b from-gray-900/20 to-gray-800/20">
         <div className="w-full h-[400px]">
           <ResponsiveContainer>
             <ComposedChart
@@ -87,14 +94,14 @@ export default function StockChart({ data = [], symbol }) {
               {/* Gradient Definitions */}
               <defs>
                 <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop 
-                    offset="5%" 
-                    stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"} 
+                  <stop
+                    offset="5%"
+                    stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"}
                     stopOpacity={0.8}
                   />
-                  <stop 
-                    offset="95%" 
-                    stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"} 
+                  <stop
+                    offset="95%"
+                    stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"}
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -167,7 +174,8 @@ export default function StockChart({ data = [], symbol }) {
               {/* Enhanced Tooltip */}
               <Tooltip
                 contentStyle={{
-                  background: "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
+                  background:
+                    "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
                   border: "1px solid #374151",
                   borderRadius: "16px",
                   color: "#fff",
@@ -192,10 +200,14 @@ export default function StockChart({ data = [], symbol }) {
                   })
                 }
                 formatter={(value) => [
-                  <span style={{ color: priceInfo.isPositive ? "#10b981" : "#ef4444" }}>
+                  <span
+                    style={{
+                      color: priceInfo.isPositive ? "#10b981" : "#ef4444",
+                    }}
+                  >
                     {formatPrice(value)}
                   </span>,
-                  "Price"
+                  "Price",
                 ]}
               />
             </ComposedChart>

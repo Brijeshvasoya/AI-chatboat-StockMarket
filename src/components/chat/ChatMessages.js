@@ -58,6 +58,7 @@ const ChatMessages = ({
                       <StockChart
                         data={msg.chart.data}
                         symbol={msg.chart.symbol}
+                        logo={msg.chart.logo}
                       />
                     ) : (
                       <div
