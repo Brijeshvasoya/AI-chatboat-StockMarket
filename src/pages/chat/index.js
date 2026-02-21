@@ -42,6 +42,35 @@ const NewChatPage = () => {
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
+      const contentType = res.headers.get("content-type");
+
+      if (contentType?.includes("application/json")) {
+        const json = await res.json();
+
+        if (json.type === "chart") {
+          setIsThinking(false);
+
+          setChatHistory((p) => [
+            ...p,
+            { type: "ai", content: "", chart: json },
+          ]);
+
+          // ⭐ SAVE CHART DATA (IMPORTANT)
+          const resolvedId = saveChat(
+            currentChatId,
+            userMsg,
+            "",
+            setCurrentChatId,
+            json,
+          );
+
+          if (!currentChatId) {
+            router.replace(`/chat/${resolvedId}`);
+          }
+
+          return;
+        }
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let aiReply = "";
@@ -81,9 +110,16 @@ const NewChatPage = () => {
               setIsTyping(false);
               setCurrentTypingMessage("");
               setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
-              const resolvedId = saveChat(currentChatId, userMsg, aiReply, setCurrentChatId);
+              const resolvedId = saveChat(
+                currentChatId,
+                userMsg,
+                aiReply,
+                setCurrentChatId,
+              );
               if (!currentChatId) {
-                router.replace(`/chat/${resolvedId}`, undefined, { shallow: false });
+                router.replace(`/chat/${resolvedId}`, undefined, {
+                  shallow: false,
+                });
               }
             }
           };

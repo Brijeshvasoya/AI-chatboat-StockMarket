@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import StockChart from "./StockChart";
 
 const ChatMessages = ({
   chatHistory,
@@ -41,29 +42,40 @@ const ChatMessages = ({
             {chatHistory.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"
-                  }`}
+                className={`flex ${
+                  msg.type === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
-                  className={`max-w-3xl px-4 py-3 rounded-2xl shadow-lg hover-lift ${msg.type === "user"
-                    ? "bg-linear-to-r from-blue-600 to-blue-700 text-white message-slide-right"
-                    : "bg-gray-800/90 text-gray-100 border border-gray-700/30 message-slide-left"
-                    }`}
+                  className={`${!msg.chart ? "max-w-3xl px-4 py-3" : "w-[70%]"}  rounded-3xl shadow-lg hover-lift ${
+                    msg.type === "user"
+                      ? "bg-linear-to-r from-blue-600 to-blue-700 text-white message-slide-right"
+                      : "bg-gray-800/90 text-gray-100 border border-gray-700/30 message-slide-left"
+                  }`}
                 >
                   {msg.type === "ai" ? (
-                    <div className="prose prose-invert prose-sm max-w-none
+                    msg.chart ? (
+                      <StockChart
+                        data={msg.chart.data}
+                        symbol={msg.chart.symbol}
+                      />
+                    ) : (
+                      <div
+                        className="prose prose-invert prose-sm max-w-none
                                     [&_table]:w-full [&_table]:border-collapse [&_table]:my-3 [&_table]:text-sm
                                     [&_th]:border [&_th]:border-gray-600 [&_th]:px-4 [&_th]:py-2 [&_th]:bg-gray-700 [&_th]:text-gray-200 [&_th]:font-semibold [&_th]:text-left
                                     [&_td]:border [&_td]:border-gray-600 [&_td]:px-4 [&_td]:py-2 [&_td]:text-gray-200
                                     [&_tr:nth-child(even)_td]:bg-gray-700/30
-                                    [&_tr:hover_td]:bg-gray-600/30">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw]}
+                                    [&_tr:hover_td]:bg-gray-600/30"
                       >
-                        {msg.content}
-                      </ReactMarkdown>
-                    </div>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeRaw]}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    )
                   ) : (
                     <p className="whitespace-pre-wrap text-sm leading-relaxed">
                       {msg.content}

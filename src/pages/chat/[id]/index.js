@@ -49,6 +49,26 @@ const ChatDetailPage = () => {
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
+      const contentType = res.headers.get("content-type");
+
+      if (contentType?.includes("application/json")) {
+        const json = await res.json();
+
+        if (json.type === "chart") {
+          setIsThinking(false);
+
+          setChatHistory((p) => [
+            ...p,
+            { type: "ai", content: "", chart: json },
+          ]);
+
+          // ⭐ SAVE CHART DATA
+          saveChat(id, userMsg, "", null, json);
+
+          return;
+        }
+      }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let aiReply = "";

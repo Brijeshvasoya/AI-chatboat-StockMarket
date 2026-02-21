@@ -11,7 +11,6 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
     if (storedUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(storedUser);
       const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const currentUser = allUsers.find((u) => u.userId === storedUser.id);
@@ -20,37 +19,44 @@ export const ChatProvider = ({ children }) => {
     setAuthReady(true);
   }, []);
 
-  const saveChat = (chatId, userMessage, aiResponse, setChatId) => {
-    const resolvedId = chatId || Date.now().toString();
+const saveChat = (chatId, userMessage, aiResponse, setChatId, chartData = null) => {
+  const resolvedId = chatId || Date.now().toString();
 
-    setSidebarHistory((prev) => {
-      const existingChat = prev.find((c) => c.id === resolvedId);
-      const updated = [
-        {
-          id: resolvedId,
-          title: existingChat?.title || userMessage.slice(0, 40),
-          messages: [
-            ...(existingChat?.messages || []),
-            { type: "user", content: userMessage },
-            { type: "ai", content: aiResponse },
-          ],
-          timestamp: Date.now(),
-        },
-        ...prev.filter((c) => c.id !== resolvedId),
-      ];
+  setSidebarHistory((prev) => {
+    const existingChat = prev.find((c) => c.id === resolvedId);
 
-      const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      const index = allUsers.findIndex((u) => u.userId === user?.id);
-      if (index !== -1) allUsers[index].chats = updated;
-      else allUsers.push({ userId: user?.id, chats: updated });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+    const aiMessage = chartData
+      ? { type: "ai", content: "", chart: chartData }
+      : { type: "ai", content: aiResponse };
 
-      return updated;
-    });
+    const updated = [
+      {
+        id: resolvedId,
+        title: existingChat?.title || userMessage.slice(0, 40),
+        messages: [
+          ...(existingChat?.messages || []),
+          { type: "user", content: userMessage },
+          aiMessage,
+        ],
+        timestamp: Date.now(),
+      },
+      ...prev.filter((c) => c.id !== resolvedId),
+    ];
 
-    if (!chatId && setChatId) setChatId(resolvedId);
-    return resolvedId;
-  };
+    const allUsers = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const index = allUsers.findIndex((u) => u.userId === user?.id);
+
+    if (index !== -1) allUsers[index].chats = updated;
+    else allUsers.push({ userId: user?.id, chats: updated });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+
+    return updated;
+  });
+
+  if (!chatId && setChatId) setChatId(resolvedId);
+  return resolvedId;
+};
 
   const deleteChat = (id, e) => {
     e?.stopPropagation();
