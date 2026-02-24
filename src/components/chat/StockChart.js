@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import {
   Line,
   XAxis,
@@ -38,11 +39,19 @@ export default function StockChart({
   symbol,
   logo,
   currency = "₹",
+  duration = "1m",
 }) {
   if (!data?.length) return null;
 
   const priceInfo = calculatePriceChange(data);
   const currentPrice = data[data.length - 1].price;
+  const durationLabel = {
+    "1w": "1 Week",
+    "1m": "1 Month",
+    "3m": "3 Month",
+    "6m": "6 Month",
+    "1y": "1 Year",
+  };
 
   return (
     <div className="w-full max-w-2xl rounded-3xl bg-gray-800/40 backdrop-blur-xl border border-gray-700/30 shadow-2xl overflow-hidden transition-all duration-300 ">
@@ -65,7 +74,7 @@ export default function StockChart({
               {symbol}
             </h3>
             <span className="text-xs text-gray-400 bg-gray-800/50 px-3 py-1 rounded-full">
-              1 Month
+              {durationLabel[duration]}
             </span>
           </div>
 

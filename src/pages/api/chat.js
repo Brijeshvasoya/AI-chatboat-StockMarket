@@ -1,3 +1,201 @@
+// import { stockAgent } from "@/components/Agent/StockAgent";
+
+// export default async function handler(req, res) {
+//   if (req.method !== "POST") {
+//     return res.status(405).json({ error: "Method not allowed" });
+//   }
+
+//   try {
+//     const { messages } = req.body;
+
+//     if (!messages || !Array.isArray(messages) || messages.length === 0) {
+//       return res.status(400).json({ error: "Messages array required" });
+//     }
+
+//     const lastUserMessage =
+//       messages[messages.length - 1]?.content?.toLowerCase() || "";
+
+//     const isChartIntent =
+//       lastUserMessage.includes("chart") ||
+//       lastUserMessage.includes("graph") ||
+//       lastUserMessage.includes("price history");
+
+//     if (isChartIntent) {
+//       const result = await stockAgent.generate({ messages });
+
+//       for (const step of result.steps || []) {
+//         for (const item of step.content || []) {
+//           if (
+//             item.type === "tool-result" ||
+//             item.type === "toolResult"
+//           ) {
+//             const data = item.output?.value ?? item.output;
+//             if (data?.type === "chart") {
+//               res.setHeader("Content-Type", "application/json");
+//               return res.json(data);
+//             }
+//           }
+//         }
+//       }
+
+//       return res.status(500).json({
+//         error: "Chart data not available",
+//       });
+//     }
+//     const result = await stockAgent.stream({ messages });
+
+//     res.setHeader("Content-Type", "text/plain; charset=utf-8");
+//     res.setHeader("Cache-Control", "no-cache");
+//     res.setHeader("Transfer-Encoding", "chunked");
+//     res.setHeader("X-Accel-Buffering", "no");
+//     res.flushHeaders();
+
+//     for await (const chunk of result.textStream) {
+//       if (chunk) {
+//         res.write(`0:${JSON.stringify(chunk)}\n`);
+//       }
+//     }
+
+//     res.end();
+//   } catch (error) {
+//     console.error("❌ Handler error:", error);
+//     return res.status(500).json({
+//       error: "Server error",
+//     });
+//   }
+// }
+// console.log(`🚀 ~ handler ~ import { stockAgent } from "@/components/Agent/StockAgent";
+
+// export default async function handler(req, res) {
+//   if (req.method !== "POST") {
+//     return res.status(405).json({ error: "Method not allowed" });
+//   }
+
+//   try {
+//     const { messages } = req.body;
+
+//     if (!messages || !Array.isArray(messages) || messages.length === 0) {
+//       return res.status(400).json({ error: "Messages array required" });
+//     }
+
+//     const lastUserMessage =
+//       messages[messages.length - 1]?.content?.toLowerCase() || "";
+
+//     const isChartIntent =
+//       lastUserMessage.includes("chart") ||
+//       lastUserMessage.includes("graph") ||
+//       lastUserMessage.includes("price history");
+
+//     if (isChartIntent) {
+//       const result = await stockAgent.generate({ messages });
+
+//       for (const step of result.steps || []) {
+//         for (const item of step.content || []) {
+//           if (
+//             item.type === "tool-result" ||
+//             item.type === "toolResult"
+//           ) {
+//             const data = item.output?.value ?? item.output;
+//             if (data?.type === "chart") {
+//               res.setHeader("Content-Type", "application/json");
+//               return res.json(data);
+//             }
+//           }
+//         }
+//       }
+
+//       return res.status(500).json({
+//         error: "Chart data not available",
+//       });
+//     }
+//     const result = await stockAgent.stream({ messages });
+
+//     res.setHeader("Content-Type", "text/plain; charset=utf-8");
+//     res.setHeader("Cache-Control", "no-cache");
+//     res.setHeader("Transfer-Encoding", "chunked");
+//     res.setHeader("X-Accel-Buffering", "no");
+//     res.flushHeaders();
+
+//     for await (const chunk of result.textStream) {
+//       if (chunk) {
+//         res.write(`0:${JSON.stringify(chunk)}\n`);
+//       }
+//     }
+
+//     res.end();
+//   } catch (error) {
+//     console.error("❌ Handler error:", error);
+//     return res.status(500).json({
+//       error: "Server error",
+//     });
+//   }
+// }:`, import { stockAgent } from "@/components/Agent/StockAgent";
+
+// export default async function handler(req, res) {
+//   if (req.method !== "POST") {
+//     return res.status(405).json({ error: "Method not allowed" });
+//   }
+
+//   try {
+//     const { messages } = req.body;
+
+//     if (!messages || !Array.isArray(messages) || messages.length === 0) {
+//       return res.status(400).json({ error: "Messages array required" });
+//     }
+
+//     const lastUserMessage =
+//       messages[messages.length - 1]?.content?.toLowerCase() || "";
+
+//     const isChartIntent =
+//       lastUserMessage.includes("chart") ||
+//       lastUserMessage.includes("graph") ||
+//       lastUserMessage.includes("price history");
+
+//     if (isChartIntent) {
+//       const result = await stockAgent.generate({ messages });
+
+//       for (const step of result.steps || []) {
+//         for (const item of step.content || []) {
+//           if (
+//             item.type === "tool-result" ||
+//             item.type === "toolResult"
+//           ) {
+//             const data = item.output?.value ?? item.output;
+//             if (data?.type === "chart") {
+//               res.setHeader("Content-Type", "application/json");
+//               return res.json(data);
+//             }
+//           }
+//         }
+//       }
+
+//       return res.status(500).json({
+//         error: "Chart data not available",
+//       });
+//     }
+//     const result = await stockAgent.stream({ messages });
+
+//     res.setHeader("Content-Type", "text/plain; charset=utf-8");
+//     res.setHeader("Cache-Control", "no-cache");
+//     res.setHeader("Transfer-Encoding", "chunked");
+//     res.setHeader("X-Accel-Buffering", "no");
+//     res.flushHeaders();
+
+//     for await (const chunk of result.textStream) {
+//       if (chunk) {
+//         res.write(`0:${JSON.stringify(chunk)}\n`);
+//       }
+//     }
+
+//     res.end();
+//   } catch (error) {
+//     console.error("❌ Handler error:", error);
+//     return res.status(500).json({
+//       error: "Server error",
+//     });
+//   }
+// })
+
 import { stockAgent } from "@/components/Agent/StockAgent";
 
 export default async function handler(req, res) {
@@ -5,102 +203,73 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const sendStream = async (prompt) => {
-    const result = await stockAgent.stream({ prompt });
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Transfer-Encoding", "chunked");
-    res.setHeader("X-Accel-Buffering", "no");
-    res.flushHeaders();
-    for await (const chunk of result.textStream) {
-      res.write(`0:${JSON.stringify(chunk)}\n`);
-      if (res.flush) res.flush();
-    }
-    res.end();
-  };
-
   try {
-    const { message } = req.body;
+    const { messages } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ error: "Message required" });
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: "Messages array required" });
     }
-    const toolResults = await stockAgent.generate({ prompt: message });
 
-    let chartResult = null;
-    const allStockData = [];
-    for (const step of toolResults.steps || []) {
+    // 🔥 Always use generate (not stream first)
+    const result = await stockAgent.generate({ messages });
+
+    let chartData = null;
+    let textResponse = "";
+
+    for (const step of result.steps || []) {
       for (const item of step.content || []) {
-        if (item.type === "tool-result" || item.type === "toolResult") {
-          const output = item.output ?? item.result;
-          const data = output?.value ?? output;
+        // 🛠 Tool result
+        if (
+          item.type === "tool-result" ||
+          item.type === "toolResult"
+        ) {
+          const data = item.output?.value ?? item.output;
 
-          if (!data || data.error) continue;
+          if (data?.type === "chart") {
+            chartData = data;
+          }
+        }
 
-          if (data.type === "chart") {
-            chartResult = data;
-          }
-          if (data.symbol && !data.type) {
-            const alreadyAdded = allStockData.some(
-              (d) => d.symbol === data.symbol,
-            );
-            if (!alreadyAdded) allStockData.push(data);
-          }
+        // 📝 Text result
+        if (item.type === "text") {
+          textResponse += item.text || "";
         }
       }
     }
 
-    if (chartResult) {
-      res.setHeader("Content-Type", "application/json");
-      return res.json(chartResult);
+    // ✅ If chart tool was used → return structured JSON
+    if (chartData) {
+      return res.status(200).json({
+        messages: [
+          {
+            type: "ai",
+            chart: {
+              data: chartData.data,
+              symbol: chartData.symbol,
+              logo: chartData.logo,
+              currency: chartData.currency,
+              duration: chartData.duration,
+            },
+          },
+          {
+            type: "ai",
+            content: textResponse.trim(),
+          },
+        ],
+      });
     }
 
-    if (allStockData.length === 0) {
-      const lastStep = toolResults.steps?.at(-1);
-      const textContent = lastStep?.content?.find((c) => c.type === "text");
-
-      if (textContent?.text) {
-        await sendStream(
-          `Repeat this answer exactly as-is, no changes:\n\n${textContent.text}`,
-        );
-        return;
-      }
-
-      res.setHeader("Content-Type", "text/plain; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Transfer-Encoding", "chunked");
-      res.setHeader("X-Accel-Buffering", "no");
-      res.flushHeaders();
-
-      res.write(
-        `0:${JSON.stringify(
-          "Sorry, I can only help with stock market related queries.",
-        )}\n`,
-      );
-      res.end();
-      return;
-    }
-
-    let injectedContent;
-    if (allStockData.length === 1) {
-      injectedContent = `Here is the real-time stock data:\`\`\`json${JSON.stringify(allStockData[0], null, 2)}\`\`\`Now write the SINGLE STOCK FORMAT analysis.`;
-    } else {
-      const stocksText = allStockData
-        .map(
-          (data, i) => `Stock ${i + 1} (${data.symbol}):\`\`\`json${JSON.stringify(data, null, 2)}\`\`\``,
-        )
-        .join("\n\n");
-
-      injectedContent = `Here is the real-time data for ALL ${allStockData.length} stocks:${stocksText}
-      Now write the COMPARISON FORMAT only:
-      - DO NOT show any individual stock tables
-      - DO NOT show any individual stock analysis
-      - Show only: one-line summary per stock, Head-to-Head Comparison table, Final Verdict`;
-    }
-
-    await sendStream(injectedContent);
+    // ✅ Otherwise return normal text
+    return res.status(200).json({
+      messages: [
+        {
+          type: "ai",
+          content: textResponse.trim(),
+        },
+      ],
+    });
   } catch (error) {
-    console.error("❌ Handler error:", error);
-    return res.status(500).json({ error: error.message || "Server error" });
+    console.error("Handler error:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 }

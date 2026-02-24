@@ -56,10 +56,11 @@ const ChatMessages = ({
                   {msg?.type === "ai" ? (
                     msg?.chart ? (
                       <StockChart
-                        data={msg?.chart.data}
-                        symbol={msg?.chart.symbol}
-                        logo={msg?.chart.logo}
-                        currency={msg?.chart.currency}
+                        data={msg?.chart?.data}
+                        symbol={msg?.chart?.symbol}
+                        logo={msg?.chart?.logo}
+                        currency={msg?.chart?.currency}
+                        duration={msg?.chart?.duration || "1m"}
                       />
                     ) : (
                       <div

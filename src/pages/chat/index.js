@@ -25,22 +25,42 @@ const NewChatPage = () => {
   }, [user, authReady]);
 
   if (!authReady) return null;
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!messages.trim()) return;
 
-    const userMsg = messages;
+    const userMsg = messages.trim();
     setMessages("");
-    setChatHistory((p) => [...p, { type: "user", content: userMsg }]);
+
+    setChatHistory((prev) => [...prev, { type: "user", content: userMsg }]);
     setIsThinking(true);
 
     try {
+      const trimmedHistory = chatHistory
+        .filter(
+          (msg) =>
+            msg.type === "user" ||
+            (msg.type === "ai" &&
+              msg.content &&
+              msg.content.trim() !== "")
+        )
+        .slice(-20);
+
+      const formattedMessages = [
+        ...trimmedHistory.map((msg) => ({
+          role: msg.type === "user" ? "user" : "assistant",
+          content: msg.content,
+        })),
+        { role: "user", content: userMsg },
+      ];
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg }),
+        body: JSON.stringify({ messages: formattedMessages }),
       });
+
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const contentType = res.headers.get("content-type");
@@ -51,27 +71,21 @@ const NewChatPage = () => {
         if (json.type === "chart") {
           setIsThinking(false);
 
-          setChatHistory((p) => [
-            ...p,
+          setChatHistory((prev) => [
+            ...prev,
             { type: "ai", content: "", chart: json },
           ]);
 
-          // ⭐ SAVE CHART DATA (IMPORTANT)
-          const resolvedId = saveChat(
-            currentChatId,
-            userMsg,
-            "",
-            setCurrentChatId,
-            json,
-          );
-
-          if (!currentChatId) {
-            router.replace(`/chat/${resolvedId}`);
-          }
+          const resolvedId = saveChat?.(currentChatId || null, userMsg, "", null, json);
+          console.log("🚀 ~ handleSubmit ~ resolvedId:", resolvedId)
+          if (!currentChatId) router.replace(`/chat/${resolvedId}`, undefined, {
+            shallow: false,
+          });
 
           return;
         }
       }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let aiReply = "";
@@ -93,6 +107,7 @@ const NewChatPage = () => {
           setCurrentTypingMessage(aiReply);
           setTimeout(tick, 18);
         };
+
         tick();
       };
 
@@ -110,26 +125,36 @@ const NewChatPage = () => {
             } else {
               setIsTyping(false);
               setCurrentTypingMessage("");
-              setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
-              const resolvedId = saveChat(
-                currentChatId,
+
+              setChatHistory((prev) => [
+                ...prev,
+                { type: "ai", content: aiReply },
+              ]);
+
+              const resolvedId = saveChat?.(
+                currentChatId || null,
                 userMsg,
                 aiReply,
-                setCurrentChatId,
+                setCurrentChatId
               );
-              if (!currentChatId) {
+
+              if (!currentChatId && resolvedId) {
                 router.replace(`/chat/${resolvedId}`, undefined, {
                   shallow: false,
                 });
               }
             }
           };
+
           waitForQueue();
           break;
         }
 
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((line) => line.startsWith("0:"));
+
+        const lines = chunk
+          .split("\n")
+          .filter((line) => line.startsWith("0:"));
 
         for (const line of lines) {
           try {
@@ -137,17 +162,19 @@ const NewChatPage = () => {
             const tokens = text.split(/(\s+)/);
             wordQueue.push(...tokens);
             processQueue();
-          } catch (parseError) {
-            console.warn("⚠️ Parse error:", line, parseError);
+          } catch (err) {
+            console.warn("Stream parse error:", err);
           }
         }
       }
     } catch (error) {
+      console.error(error);
       setIsThinking(false);
       setIsTyping(false);
       setCurrentTypingMessage("");
-      setChatHistory((p) => [
-        ...p,
+
+      setChatHistory((prev) => [
+        ...prev,
         { type: "ai", content: "Sorry, something went wrong." },
       ]);
     }
@@ -158,22 +185,22 @@ const NewChatPage = () => {
         <title>StockSense AI - New Chat</title>
       </Head>
       <ChatLayout>
-      <ChatMessages
-        chatHistory={chatHistory}
-        isThinking={isThinking}
-        isTyping={isTyping}
-        currentTypingMessage={currentTypingMessage}
-        messagesEndRef={messagesEndRef}
-        user={user}
-        className="backdrop-blur-sm"
-      />
-      <ChatInput
-        messages={messages}
-        setMessages={setMessages}
-        handleSubmit={handleSubmit}
-        isThinking={isThinking}
-        isTyping={isTyping}
-      />
+        <ChatMessages
+          chatHistory={chatHistory}
+          isThinking={isThinking}
+          isTyping={isTyping}
+          currentTypingMessage={currentTypingMessage}
+          messagesEndRef={messagesEndRef}
+          user={user}
+          className="backdrop-blur-sm"
+        />
+        <ChatInput
+          messages={messages}
+          setMessages={setMessages}
+          handleSubmit={handleSubmit}
+          isThinking={isThinking}
+          isTyping={isTyping}
+        />
       </ChatLayout>
     </>
   );

@@ -34,112 +34,143 @@ const ChatDetailPage = () => {
   }, [id, sidebarHistory]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!messages.trim()) return;
+  e.preventDefault();
+  if (!messages.trim()) return;
 
-    const userMsg = messages;
-    setMessages("");
-    setChatHistory((p) => [...p, { type: "user", content: userMsg }]);
-    setIsThinking(true);
+  const userMsg = messages.trim();
+  setMessages("");
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg }),
-      });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  setChatHistory((prev) => [...prev, { type: "user", content: userMsg }]);
+  setIsThinking(true);
 
-      const contentType = res.headers.get("content-type");
+  try {
+    const trimmedHistory = chatHistory
+      .filter(
+        (msg) =>
+          msg.type === "user" ||
+          (msg.type === "ai" &&
+            msg.content &&
+            msg.content.trim() !== "")
+      )
+      .slice(-20);
 
-      if (contentType?.includes("application/json")) {
-        const json = await res.json();
+    const formattedMessages = [
+      ...trimmedHistory.map((msg) => ({
+        role: msg.type === "user" ? "user" : "assistant",
+        content: msg.content,
+      })),
+      { role: "user", content: userMsg },
+    ];
 
-        if (json.type === "chart") {
-          setIsThinking(false);
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: formattedMessages }),
+    });
 
-          setChatHistory((p) => [
-            ...p,
-            { type: "ai", content: "", chart: json },
-          ]);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-          // ⭐ SAVE CHART DATA
-          saveChat(id, userMsg, "", null, json);
+    const contentType = res.headers.get("content-type");
 
+    if (contentType?.includes("application/json")) {
+      const json = await res.json();
+
+      if (json.type === "chart") {
+        setIsThinking(false);
+
+        setChatHistory((prev) => [
+          ...prev,
+          { type: "ai", content: "", chart: json },
+        ]);
+
+        saveChat?.(id || null, userMsg, "", null, json);
+
+        return;
+      }
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let aiReply = "";
+
+    let wordQueue = [];
+    let isProcessingQueue = false;
+
+    const processQueue = () => {
+      if (isProcessingQueue) return;
+      isProcessingQueue = true;
+
+      const tick = () => {
+        if (wordQueue.length === 0) {
+          isProcessingQueue = false;
           return;
         }
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let aiReply = "";
-
-      let wordQueue = [];
-      let isProcessingQueue = false;
-
-      const processQueue = () => {
-        if (isProcessingQueue) return;
-        isProcessingQueue = true;
-
-        const tick = () => {
-          if (wordQueue.length === 0) {
-            isProcessingQueue = false;
-            return;
-          }
-          const next = wordQueue.shift();
-          aiReply += next;
-          setCurrentTypingMessage(aiReply);
-          setTimeout(tick, 18);
-        };
-        tick();
+        const next = wordQueue.shift();
+        aiReply += next;
+        setCurrentTypingMessage(aiReply);
+        setTimeout(tick, 18);
       };
 
-      setIsThinking(false);
-      setIsTyping(true);
-      setCurrentTypingMessage("");
+      tick();
+    };
 
-      while (true) {
-        const { done, value } = await reader.read();
+    setIsThinking(false);
+    setIsTyping(true);
+    setCurrentTypingMessage("");
 
-        if (done) {
-          const waitForQueue = () => {
-            if (wordQueue.length > 0 || isProcessingQueue) {
-              setTimeout(waitForQueue, 20);
-            } else {
-              setIsTyping(false);
-              setCurrentTypingMessage("");
-              setChatHistory((p) => [...p, { type: "ai", content: aiReply }]);
-              saveChat(id, userMsg, aiReply, null);
-            }
-          };
-          waitForQueue();
-          break;
-        }
+    while (true) {
+      const { done, value } = await reader.read();
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((line) => line.startsWith("0:"));
+      if (done) {
+        const waitForQueue = () => {
+          if (wordQueue.length > 0 || isProcessingQueue) {
+            setTimeout(waitForQueue, 20);
+          } else {
+            setIsTyping(false);
+            setCurrentTypingMessage("");
 
-        for (const line of lines) {
-          try {
-            const text = JSON.parse(line.slice(2));
-            const tokens = text.split(/(\s+)/);
-            wordQueue.push(...tokens);
-            processQueue();
-          } catch (parseError) {
-            console.warn("⚠️ Parse error:", line, parseError);
+            setChatHistory((prev) => [
+              ...prev,
+              { type: "ai", content: aiReply },
+            ]);
+
+            saveChat?.(id || null, userMsg, aiReply, null);
           }
+        };
+
+        waitForQueue();
+        break;
+      }
+
+      const chunk = decoder.decode(value, { stream: true });
+
+      const lines = chunk
+        .split("\n")
+        .filter((line) => line.startsWith("0:"));
+
+      for (const line of lines) {
+        try {
+          const text = JSON.parse(line.slice(2));
+          const tokens = text.split(/(\s+)/);
+          wordQueue.push(...tokens);
+          processQueue();
+        } catch (err) {
+          console.warn("Stream parse error:", err);
         }
       }
-    } catch (error) {
-      setIsThinking(false);
-      setIsTyping(false);
-      setCurrentTypingMessage("");
-      setChatHistory((p) => [
-        ...p,
-        { type: "ai", content: "Sorry, something went wrong." },
-      ]);
     }
-  };
+  } catch (error) {
+    console.error(error);
+    setIsThinking(false);
+    setIsTyping(false);
+    setCurrentTypingMessage("");
+
+    setChatHistory((prev) => [
+      ...prev,
+      { type: "ai", content: "Sorry, something went wrong." },
+    ]);
+  }
+};
 
   return (
     <>
