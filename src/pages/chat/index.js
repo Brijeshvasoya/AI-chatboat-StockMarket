@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import ChatMessages from "@/components/chat/ChatMessages";
 import ChatInput from "@/components/chat/ChatInput";
 import ChatLayout from "@/layouts/index";
@@ -152,7 +153,11 @@ const NewChatPage = () => {
     }
   };
   return (
-    <ChatLayout>
+    <>
+      <Head>
+        <title>StockSense AI - New Chat</title>
+      </Head>
+      <ChatLayout>
       <ChatMessages
         chatHistory={chatHistory}
         isThinking={isThinking}
@@ -169,7 +174,8 @@ const NewChatPage = () => {
         isThinking={isThinking}
         isTyping={isTyping}
       />
-    </ChatLayout>
+      </ChatLayout>
+    </>
   );
 };
 

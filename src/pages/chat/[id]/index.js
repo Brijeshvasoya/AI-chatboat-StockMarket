@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import ChatMessages from "@/components/chat/ChatMessages";
 import ChatInput from "@/components/chat/ChatInput";
 import ChatLayout from "@/layouts/index";
@@ -141,24 +142,29 @@ const ChatDetailPage = () => {
   };
 
   return (
-    <ChatLayout>
-      <ChatMessages
-        chatHistory={chatHistory}
-        isThinking={isThinking}
-        isTyping={isTyping}
-        currentTypingMessage={currentTypingMessage}
-        messagesEndRef={messagesEndRef}
-        user={user}
-        className="backdrop-blur-sm"
-      />
-      <ChatInput
-        messages={messages}
-        setMessages={setMessages}
-        handleSubmit={handleSubmit}
-        isThinking={isThinking}
-        isTyping={isTyping}
-      />
-    </ChatLayout>
+    <>
+      <Head>
+        <title>{sidebarHistory?.map((chat) => { if (chat?.id === id) return chat?.title })}</title>
+      </Head>
+      <ChatLayout>
+        <ChatMessages
+          chatHistory={chatHistory}
+          isThinking={isThinking}
+          isTyping={isTyping}
+          currentTypingMessage={currentTypingMessage}
+          messagesEndRef={messagesEndRef}
+          user={user}
+          className="backdrop-blur-sm"
+        />
+        <ChatInput
+          messages={messages}
+          setMessages={setMessages}
+          handleSubmit={handleSubmit}
+          isThinking={isThinking}
+          isTyping={isTyping}
+        />
+      </ChatLayout>
+    </>
   );
 };
 

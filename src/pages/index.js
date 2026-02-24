@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import StarBackground from "@/components/chat/StarBackground";
 import { useChat } from "@/context/ChatContext";
 
@@ -64,29 +65,33 @@ export default function Home() {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden">
-      <StarBackground />
-      <div className="relative flex flex-col z-10 min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
-          <h1
-            className="text-3xl font-bold text-transparent bg-clip-text mb-4"
-            style={{
-              backgroundImage: "linear-gradient(to right, #0ea5e9, #10b981)",
+    <>
+      <Head>
+        <title>StockSense AI - Professional Stock Market Analysis</title>
+      </Head>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative overflow-hidden">
+        <StarBackground />
+        <div className="relative flex flex-col z-10 min-h-screen items-center justify-center p-4">
+          <div className="w-full max-w-md text-center">
+            <h1
+              className="text-3xl font-bold text-transparent bg-clip-text mb-4"
+              style={{
+                backgroundImage: "linear-gradient(to right, #0ea5e9, #10b981)",
+                backgroundSize: "200% 100%",
+                backgroundPosition: "200% 0",
+                animation: "gradientFill 3s ease-in-out infinite",
+              }}
+            >
+              StockSense AI
+            </h1>
+            <h2 className="text-xl font-semibold text-transparent bg-clip-text mb-2" style={{
+              backgroundImage: "linear-gradient(to right, #f472, #10b981)",
               backgroundSize: "200% 100%",
               backgroundPosition: "200% 0",
               animation: "gradientFill 3s ease-in-out infinite",
-            }}
-          >
-            AI Assistant
-          </h1>
-          <h2 className="text-xl font-semibold text-transparent bg-clip-text mb-2" style={{
-            backgroundImage: "linear-gradient(to right, #f472, #10b981)",
-            backgroundSize: "200% 100%",
-            backgroundPosition: "200% 0",
-            animation: "gradientFill 3s ease-in-out infinite",
-          }}>
-            {isLogin ? "Welcome Back" : "Create Account"}
-          </h2>
+            }}>
+              {isLogin ? "Welcome Back" : "Create Account"}
+            </h2>
           <p className="text-gray-400 pb-4">
             {isLogin
               ? "Sign in to continue to AI Assistant"
@@ -184,5 +189,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </>
   );
 }

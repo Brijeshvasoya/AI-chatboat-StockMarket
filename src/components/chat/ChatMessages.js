@@ -43,23 +43,23 @@ const ChatMessages = ({
               <div
                 key={index}
                 className={`flex ${
-                  msg.type === "user" ? "justify-end" : "justify-start"
+                  msg?.type === "user" ? "justify-end" : "justify-start"
                 }`}
               >
                 <div
-                  className={`${!msg.chart ? "max-w-3xl px-4 py-3" : "w-[70%]"}  rounded-3xl shadow-lg hover-lift ${
-                    msg.type === "user"
+                  className={`${!msg?.chart ? "max-w-3xl px-4 py-3" : "w-[70%]"}  rounded-3xl shadow-lg hover-lift ${
+                    msg?.type === "user"
                       ? "bg-linear-to-r from-blue-600 to-blue-700 text-white message-slide-right"
                       : "bg-gray-800/90 text-gray-100 border border-gray-700/30 message-slide-left"
                   }`}
                 >
-                  {msg.type === "ai" ? (
-                    msg.chart ? (
+                  {msg?.type === "ai" ? (
+                    msg?.chart ? (
                       <StockChart
-                        data={msg.chart.data}
-                        symbol={msg.chart.symbol}
-                        logo={msg.chart.logo}
-                        currency={msg.chart.currency}
+                        data={msg?.chart.data}
+                        symbol={msg?.chart.symbol}
+                        logo={msg?.chart.logo}
+                        currency={msg?.chart.currency}
                       />
                     ) : (
                       <div
