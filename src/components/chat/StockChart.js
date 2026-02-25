@@ -119,7 +119,7 @@ export default function StockChart({
                   <stop
                     offset="100%"
                     stopColor={priceInfo.isPositive ? "#10b981" : "#ef4444"}
-                    stopOpacity={0}
+                    stopOpacity={0.1}
                   />
                 </linearGradient>
                 <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
@@ -212,14 +212,14 @@ export default function StockChart({
                 }}
                 contentStyle={{
                   background:
-                    "linear-gradient(135deg, #1f2937 0%, #111827 100%)",
+                    "linear-gradient(135deg, #000a789b 20%, #05768dff 100%)",
                   border: "1px solid #374151",
                   borderRadius: "12px",
                   color: "#fff",
                   padding: "10px 14px",
                   boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
                 }}
-                labelStyle={{ color: "#9ca3af", fontSize: "12px" }}
+                labelStyle={{ color: "#fff", fontSize: "12px", fontWeight: 600 }}
                 formatter={(value) => formatPrice(value, currency)}
                 labelFormatter={(label) =>
                   new Date(label).toLocaleDateString("en-US", {

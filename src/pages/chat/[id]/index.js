@@ -34,143 +34,138 @@ const ChatDetailPage = () => {
   }, [id, sidebarHistory]);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!messages.trim()) return;
+    e.preventDefault();
+    if (!messages.trim()) return;
 
-  const userMsg = messages.trim();
-  setMessages("");
+    const userMsg = messages.trim();
+    setMessages("");
 
-  setChatHistory((prev) => [...prev, { type: "user", content: userMsg }]);
-  setIsThinking(true);
+    setChatHistory((prev) => [...prev, { type: "user", content: userMsg }]);
+    setIsThinking(true);
 
-  try {
-    const trimmedHistory = chatHistory
-      .filter(
-        (msg) =>
-          msg.type === "user" ||
-          (msg.type === "ai" &&
-            msg.content &&
-            msg.content.trim() !== "")
-      )
-      .slice(-20);
+    try {
+      const trimmedHistory = chatHistory
+        .filter(
+          (msg) =>
+            msg.type === "user" ||
+            (msg.type === "ai" && msg.content && msg.content.trim() !== "")
+        )
+        .slice(-20);
 
-    const formattedMessages = [
-      ...trimmedHistory.map((msg) => ({
-        role: msg.type === "user" ? "user" : "assistant",
-        content: msg.content,
-      })),
-      { role: "user", content: userMsg },
-    ];
+      const formattedMessages = [
+        ...trimmedHistory.map((msg) => ({
+          role: msg.type === "user" ? "user" : "assistant",
+          content: msg.content,
+        })),
+        { role: "user", content: userMsg },
+      ];
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: formattedMessages }),
-    });
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: formattedMessages }),
+      });
 
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-    const contentType = res.headers.get("content-type");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let aiReply = "";
+      let wordQueue = [];
+      let isProcessingQueue = false;
 
-    if (contentType?.includes("application/json")) {
-      const json = await res.json();
+      const processQueue = () => {
+        if (isProcessingQueue) return;
+        isProcessingQueue = true;
 
-      if (json.type === "chart") {
-        setIsThinking(false);
-
-        setChatHistory((prev) => [
-          ...prev,
-          { type: "ai", content: "", chart: json },
-        ]);
-
-        saveChat?.(id || null, userMsg, "", null, json);
-
-        return;
-      }
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let aiReply = "";
-
-    let wordQueue = [];
-    let isProcessingQueue = false;
-
-    const processQueue = () => {
-      if (isProcessingQueue) return;
-      isProcessingQueue = true;
-
-      const tick = () => {
-        if (wordQueue.length === 0) {
-          isProcessingQueue = false;
-          return;
-        }
-        const next = wordQueue.shift();
-        aiReply += next;
-        setCurrentTypingMessage(aiReply);
-        setTimeout(tick, 18);
-      };
-
-      tick();
-    };
-
-    setIsThinking(false);
-    setIsTyping(true);
-    setCurrentTypingMessage("");
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        const waitForQueue = () => {
-          if (wordQueue.length > 0 || isProcessingQueue) {
-            setTimeout(waitForQueue, 20);
-          } else {
-            setIsTyping(false);
-            setCurrentTypingMessage("");
-
-            setChatHistory((prev) => [
-              ...prev,
-              { type: "ai", content: aiReply },
-            ]);
-
-            saveChat?.(id || null, userMsg, aiReply, null);
+        const tick = () => {
+          if (wordQueue.length === 0) {
+            isProcessingQueue = false;
+            return;
           }
+          const next = wordQueue.shift();
+          aiReply += next;
+          setCurrentTypingMessage(aiReply);
+          setTimeout(tick, 18);
         };
 
-        waitForQueue();
-        break;
-      }
+        tick();
+      };
 
-      const chunk = decoder.decode(value, { stream: true });
+      setIsThinking(false);
+      setIsTyping(true);
+      setCurrentTypingMessage("");
 
-      const lines = chunk
-        .split("\n")
-        .filter((line) => line.startsWith("0:"));
+      while (true) {
+        const { done, value } = await reader.read();
 
-      for (const line of lines) {
-        try {
-          const text = JSON.parse(line.slice(2));
-          const tokens = text.split(/(\s+)/);
-          wordQueue.push(...tokens);
-          processQueue();
-        } catch (err) {
-          console.warn("Stream parse error:", err);
+        if (done) {
+          const waitForQueue = () => {
+            if (wordQueue.length > 0 || isProcessingQueue) {
+              setTimeout(waitForQueue, 20);
+            } else {
+              setIsTyping(false);
+              setCurrentTypingMessage("");
+              setChatHistory((prev) => [
+                ...prev,
+                { type: "ai", content: aiReply },
+              ]);
+              saveChat?.(id || null, userMsg, aiReply, null);
+            }
+          };
+
+          waitForQueue();
+          break;
+        }
+
+        const raw = decoder.decode(value, { stream: true });
+        const lines = raw.split("\n").filter(Boolean);
+
+        for (const line of lines) {
+          const prefix = line[0];
+          const payload = line.slice(2);
+
+          try {
+            if (prefix === "0") {
+              // Text chunk
+              const text = JSON.parse(payload);
+              const tokens = text.split(/(\s+)/);
+              wordQueue.push(...tokens);
+              processQueue();
+
+            } else if (prefix === "8") {
+              // Chart data — bail out of text streaming immediately
+              const chartData = JSON.parse(payload);
+              setIsTyping(false);
+              setCurrentTypingMessage("");
+              setChatHistory((prev) => [
+                ...prev,
+                { type: "ai", content: "", chart: chartData },
+              ]);
+              saveChat?.(id || null, userMsg, "", null, chartData);
+              return; // ← exit handleSubmit entirely
+
+            } else if (prefix === "3") {
+              // Error sent from server
+              const errMsg = JSON.parse(payload);
+              throw new Error(errMsg);
+            }
+          } catch (err) {
+            console.warn("Stream parse error:", err);
+          }
         }
       }
+    } catch (error) {
+      console.log("Stream error:", error);
+      setIsThinking(false);
+      setIsTyping(false);
+      setCurrentTypingMessage("");
+      setChatHistory((prev) => [
+        ...prev,
+        { type: "ai", content: "Sorry, something went wrong." },
+      ]);
     }
-  } catch (error) {
-    console.log("Stream error:", error);
-    setIsThinking(false);
-    setIsTyping(false);
-    setCurrentTypingMessage("");
-
-    setChatHistory((prev) => [
-      ...prev,
-      { type: "ai", content: "Sorry, something went wrong." },
-    ]);
-  }
-};
+  };
 
   return (
     <>
