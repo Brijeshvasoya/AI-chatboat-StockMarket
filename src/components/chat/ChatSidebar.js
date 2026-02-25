@@ -56,7 +56,7 @@ const ChatSidebar = ({
               </div>
               <button
                 onClick={(e) => deleteChat(chat.id, e)}
-                className="opacity-0 group-hover:opacity-100"
+                className="opacity-0 cursor-pointer group-hover:opacity-100"
               >
                 <TrashIcon />
               </button>
