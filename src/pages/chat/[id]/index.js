@@ -160,7 +160,7 @@ const ChatDetailPage = () => {
       }
     }
   } catch (error) {
-    console.error(error);
+    console.log("Stream error:", error);
     setIsThinking(false);
     setIsTyping(false);
     setCurrentTypingMessage("");
