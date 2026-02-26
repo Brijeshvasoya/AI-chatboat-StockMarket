@@ -12,7 +12,7 @@ function extractDuration(messages) {
     if (/\b(1\s*months?|one\s*months?|30\s*days?|1m)\b/.test(text)) return "1m";
     if (/\b(1\s*weeks?|one\s*weeks?|7\s*days?|1w)\b/.test(text)) return "1w";
 
-    if (/chart|graph|price history/.test(text)) break;
+    if (/chart|graph|price history|price chart|plot|candlestick|line chart|bar chart|stock chart|technical analysis|price trend|market data|historical data|price movement|stock performance|trading view|market chart|price graph|stock graph|performance chart|price visualization|visualize/.test(text)) break;
   }
   return "1m";
 }
@@ -32,10 +32,28 @@ export default async function handler(req, res) {
     const isChartIntent =
       lastUserLower.includes("chart") ||
       lastUserLower.includes("graph") ||
-      lastUserLower.includes("price history");
+      lastUserLower.includes("price history") ||
+      lastUserLower.includes("price chart") ||
+      lastUserLower.includes("plot") ||
+      lastUserLower.includes("visualize") ||
+      lastUserLower.includes("candlestick") ||
+      lastUserLower.includes("line chart") ||
+      lastUserLower.includes("bar chart") ||
+      lastUserLower.includes("stock chart") ||
+      lastUserLower.includes("technical analysis") ||
+      lastUserLower.includes("price trend") ||
+      lastUserLower.includes("market data") ||
+      lastUserLower.includes("historical data") ||
+      lastUserLower.includes("price movement") ||
+      lastUserLower.includes("stock performance") ||
+      lastUserLower.includes("trading view") ||
+      lastUserLower.includes("market chart") ||
+      lastUserLower.includes("price graph") ||
+      lastUserLower.includes("stock graph") ||
+      lastUserLower.includes("performance chart") ||
+      lastUserLower.includes("price visualization");
     if (isChartIntent) {
       const duration = extractDuration(messages);
-      console.log(`📊 Chart request | duration detected: "${duration}" | message: "${lastUserMessage}"`);
       const patchedMessages = messages.map((msg, idx) => {
         if (idx !== messages.length - 1) return msg;
         return {
@@ -51,13 +69,11 @@ export default async function handler(req, res) {
             if (data?.type === "chart") {
               let chartToSend = data;
               if (data.duration !== duration) {
-                console.warn(`⚠️ Agent used wrong duration "${data.duration}" instead of "${duration}". Bypassing agent.`);
                 const corrected = await getStockChart.execute({ symbol: data.symbol, duration });
                 if (corrected?.type === "chart") {
                   chartToSend = corrected;
                 }
               }
-              console.log(`✅ Sending chart: symbol="${chartToSend.symbol}" duration="${chartToSend.duration}"`);
               res.setHeader("Content-Type", "text/plain; charset=utf-8");
               res.setHeader("Cache-Control", "no-cache");
               res.setHeader("Transfer-Encoding", "chunked");
@@ -83,7 +99,6 @@ export default async function handler(req, res) {
     }
     res.end();
   } catch (error) {
-    console.error("❌ Handler error:", error);
     return res.status(500).json({ error: "Server error" });
   }
 }
